@@ -18,7 +18,28 @@ import BaseGame from './BaseGame';
  */
 export default class Game extends BaseGame {
 
-  constructor (private levels: Level[]) {
+  getRandomLevel(): Level {
+    return this.levels[Math.floor(Math.random() * this.levels.length)];
+  }
+
+  mayIHaveGoldenApple(): boolean {
+    let chance: number = 5;
+    let pick: number = Math.random() * 100;
+    if (pick < chance) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+
+  removeGrid(): void {
+    let grids = document.querySelectorAll('[class$="-grid"]');
+    grids.forEach(element => Utils.removeNode(element));
+    this.gridVisible = false;
+  }
+
+  constructor(private levels: Level[]) {
     super();
     this.head = new Piece({ x: 80, y: 80, type: 'head' });
     this.tail = this.resetHead();
@@ -28,15 +49,15 @@ export default class Game extends BaseGame {
     this.setEvents();
   }
 
-  get highScore (): number {
+  get highScore(): number {
     return parseInt(localStorage.getItem('high-score') || '0', 10) || 0;
   }
 
-  set highScore (value: number) {
+  set highScore(value: number) {
     localStorage.setItem('high-score', value.toString());
   }
 
-  renderGarden () {
+  renderGarden() {
     const { clientHeight, clientWidth } = document.body;
     const TOP = Math.max(60, Math.floor(clientHeight * 0.10));
     const LEFT = Math.max(60, Math.floor(clientWidth * 0.10));
@@ -63,10 +84,10 @@ export default class Game extends BaseGame {
     this.showScore();
   }
 
-  
+
 
   // Remove the old chain, put HEAD in the starting position
-  resetHead (): Piece {
+  resetHead(): Piece {
     if (this.head.next) {
       this.head.next.remove();
       this.head.next = null;
@@ -89,9 +110,9 @@ export default class Game extends BaseGame {
   /**
    * Reset all values and restart the game
    */
-  start (): void {
+  start(): void {
     // Don"t restart already running game
-    if (this.moving === false) {
+    if (this.moving == false) {
       this.tail = this.resetHead();
       this.debugSpeed = 0;
       this.keyHeld = 0;
@@ -108,12 +129,12 @@ export default class Game extends BaseGame {
   /**
    * GAME OVER
    */
-  over (): void {
+  over(): void {
     this.moving = false;
     // const { score } = this;
 
     const die = (node: Piece | null) => {
-      if (node === null) return;
+      if (node == null) return;
       node.el.classList.add('vanish');
       setTimeout(() => die(node.prev), 20);
     };
@@ -123,14 +144,14 @@ export default class Game extends BaseGame {
     this.splashToggle(true);
   }
 
-  showTopScore () {
+  showTopScore() {
     const top = document.getElementById('top') as HTMLDivElement;
     this.highScore = this.highScore < this.score ? this.score : this.highScore;
     top.innerHTML = `TOP: ${this.highScore}`;
   }
 
   // eslint-disable-next-line class-methods-use-this
-  splashToggle (show: boolean) {
+  splashToggle(show: boolean) {
     const splash = document.querySelector('.splash') as HTMLElement;
     splash.style.display = show ? '' : 'none';
   }
@@ -138,7 +159,7 @@ export default class Game extends BaseGame {
   /**
    * Get a random empty location for food
    */
-  getFoodLocation (): number[] {
+  getFoodLocation(): number[] {
     let x = Utils.rand(MARGIN, this.garden.clientWidth - MARGIN, SIZE);
     let y = Utils.rand(MARGIN, this.garden.clientHeight - MARGIN, SIZE);
 
@@ -152,7 +173,7 @@ export default class Game extends BaseGame {
     return [x, y];
   }
 
-  handleFood (): void {
+  handleFood(): void {
     // If the there is no food, create a random one.
     if (this.food == null) {
       const [foodX, foodY] = this.getFoodLocation();
@@ -163,37 +184,37 @@ export default class Game extends BaseGame {
     // set the correct type for each piece
     if (this.head.isCollidingWith(this.food) || this.head.isCollidingWith(this.goldenApple)) {
       const type = this.head.isCollidingWith(this.food) ? 'food' : 'golden';
-
+      /*      console.log(this.food);
+           console.log(this.goldenApple); */
       this.swallowFood(type);
 
       // Do not count baits grabbed while
       // in no clip mode
-      if (this.noClip === false) {
+      if (this.noClip == false) {
         this.growth += 1; // Snake got bigger
       }
-
-      this.updateScore(type === 'food' ? 10 : 50); // Calculate the new score
+      // console.log(type);
+      //console.log(type == 'food' ? 10 : 50);
+      this.updateScore(type == 'food' ? 10 : 50); // Calculate the new score
       this.showScore(); // Update the score
     }
   }
 
-  
-
-  handleGoldenApple () {
-    if (this.goldenApple === null) {
+  handleGoldenApple() {
+    if (this.goldenApple == null) {
       const [foodX, foodY] = this.getFoodLocation();
       this.goldenApple = new Piece({ x: foodX, y: foodY, type: 'golden' });
     }
   }
 
-  async swallowFood (type: string) {
-    if (type === 'food') {
+  async swallowFood(type: string) {
+    if (type == 'food') {
       if (this.food == null) { return; }
       this.tail.next = this.food;
       this.food.prev = this.tail;
       this.tail = this.food;
       this.food = null;
-    } else if (type === 'golden') {
+    } else if (type == 'golden') {
       if (this.goldenApple == null) { return; }
       this.tail.next = this.goldenApple;
       this.goldenApple.prev = this.tail;
@@ -202,7 +223,7 @@ export default class Game extends BaseGame {
     }
 
     const swallow = (node: Piece) => {
-      if (node === null) return;
+      if (node == null) return;
       if (node.next !== null) {
         if (node.prev !== null) {
           node.prev.el.classList.remove('gulp');
@@ -226,15 +247,14 @@ export default class Game extends BaseGame {
     }
   }
 
-  getSpeed (): number {
+  getSpeed(): number {
     const initialSpeed = 200;
     const calculated = (initialSpeed - this.growth * 0.5) + this.debugSpeed + this.keyHeld;
-
     return Utils.bound(calculated, FASTEST, SLOWEST);
   }
 
-  updateScore (won: number): number {
-    if (this.noClip === true) {
+  updateScore(won: number): number {
+    if (this.noClip == true) {
       return this.score;
     }
 
@@ -243,14 +263,14 @@ export default class Game extends BaseGame {
     return this.score;
   }
 
-  showScore (): void {
+  showScore(): void {
     const points = document.getElementById('points') as HTMLDivElement;
 
     // Speed: ${Math.floor(1000 / this.getSpeed())}bps
     points.innerHTML = `${this.score}`;
   }
 
-  frame (): void {
+  frame(): void {
     if (this.moving) {
       setTimeout(() => {
         requestAnimationFrame(this.frame.bind(this));
@@ -262,7 +282,7 @@ export default class Game extends BaseGame {
     }
 
     // If head hits an occupied space, GAME OVER
-    if (Locations.has(this.head.x, this.head.y) && this.noClip === false) {
+    if (Locations.has(this.head.x, this.head.y) && this.noClip == false) {
       return this.over();
     }
 
@@ -318,19 +338,19 @@ export default class Game extends BaseGame {
    * Don"t let snake to go backwards
    */
   // eslint-disable-next-line class-methods-use-this
-  notBackwards (key: number): boolean {
+  notBackwards(key: number): boolean {
     const lastDirection = Directions.peek();
 
-    if ((lastDirection === keys.UP && key === keys.DOWN)
-        || (lastDirection === keys.DOWN && key === keys.UP)
-        || (lastDirection === keys.LEFT && key === keys.RIGHT)
-        || (lastDirection === keys.RIGHT && key === keys.LEFT)) {
+    if ((lastDirection == keys.UP && key == keys.DOWN)
+      || (lastDirection == keys.DOWN && key == keys.UP)
+      || (lastDirection == keys.LEFT && key == keys.RIGHT)
+      || (lastDirection == keys.RIGHT && key == keys.LEFT)) {
       return false;
     }
     return true;
   }
 
-  setEvents (): void {
+  setEvents(): void {
     document.addEventListener('keydown', (e: KeyboardEvent) => {
       switch (e.keyCode) {
         // Toggle Grid
@@ -350,7 +370,7 @@ export default class Game extends BaseGame {
         case keys.J:
           this.debugSpeed += 10;
           break;
-          // Speed up the snake
+        // Speed up the snake
         case keys.K:
           this.debugSpeed -= 10;
           break;
@@ -375,7 +395,7 @@ export default class Game extends BaseGame {
           if (e.keyCode >= 48 && e.keyCode <= 57) {
             const num = e.keyCode - 48; // to get the pressed number
 
-            if (num === 0) {
+            if (num == 0) {
               if (this.currentLevel) {
                 this.currentLevel.remove();
                 this.currentLevel = null;
@@ -406,7 +426,7 @@ export default class Game extends BaseGame {
 
     document.addEventListener('click', (e: MouseEvent) => {
       const el = e.target as HTMLElement;
-      if (el.id === 'start') {
+      if (el.id == 'start') {
         this.start();
       }
     });
@@ -438,9 +458,9 @@ export default class Game extends BaseGame {
     }, 100));
   }
 
-  
 
-  drawGrid (): void {
+
+  drawGrid(): void {
     for (let x = 0; x < this.garden.clientWidth; x += SIZE) {
       const div = document.createElement('div');
       div.style.top = '0px';
@@ -460,7 +480,7 @@ export default class Game extends BaseGame {
     this.gridVisible = true;
   }
 
-  drawHitboxes () {
+  drawHitboxes() {
     document.querySelectorAll('.hitbox').forEach(Utils.removeNode);
 
     Locations.getAll().forEach((a, k) => {

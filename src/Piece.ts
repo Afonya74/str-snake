@@ -53,35 +53,35 @@ interface IPiece {
  * Pótold a hiányzó tulajdonságokat és metódusokat az interfész alapján.
  */
 export default class Piece implements IPiece {
-  next: Piece = null;
-  prev: Piece = null;
-  x = 0;
-  y = 0;
-  el = new HTMLDivElement();
-  direction = '';
-  type = '';
-  garden = new HTMLDivElement();
+  next: Piece;
+  prev: Piece;
+  x: number;
+  y: number;
+  el: HTMLDivElement;
+  direction: string;
+  type: string;
+  garden: HTMLDivElement;
 
   setType(type: string): void {
     this.type = type;
     this.applyClass();
-  };
+  }
 
   applyClass(): void {
     this.el.className = '';
     this.el.classList.add('cell', this.type, this.direction);
-  };
+  }
 
   isCollidingWith(node: Piece | null): boolean {
-    if (node === null) {
+    if (node == null) {
       return false;
     };
-    if ((this.x === node.x) && (this.y === node.y)) {
+    if ((this.x == node.x) && (this.y == node.y)) {
       return true;
     } else {
       return false;
     }
-  };
+  }
 
   constructor({
     x,
@@ -164,7 +164,7 @@ export default class Piece implements IPiece {
     if (this.next !== null) {
       // If this piece is a head piece, immediate piece should receive heads current
       // direction instead of old one this is needed to have a fluid motion
-      this.next.move(this.x, this.y, this.type === 'head' ? this.direction : tDirection);
+      this.next.move(this.x, this.y, this.type == 'head' ? this.direction : tDirection);
     } else {
       // We are the last piece, previous position
       // is now empty, clear it
@@ -173,13 +173,13 @@ export default class Piece implements IPiece {
 
     // if I"m part of body and no one is following me
     // then I must be the tail
-    if (this.next === null && this.type === 'body') {
+    if (this.next == null && this.type == 'body') {
       this.el.classList.add('tail');
     }
 
     // if me and the piece following me are at the same spot
     // then piece following me must be the food we just swallowed
-    if (this.next !== null && this.next.x === X && this.next.y === Y) {
+    if (this.next !== null && this.next.x == X && this.next.y == Y) {
       this.next.el.classList.add('gulp');
     }
 
